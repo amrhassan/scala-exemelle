@@ -13,21 +13,15 @@ import cats.implicits._
 /** An XML stream parser that changes the state of its underlying InputStream */
 case class UnsafeStreamParser private(private val reader: XMLEventReader) {
 
-  /** Prepended elements to the stream.
-    *
-    * Latest elements first!
-    */
-  private var heads: List[Elem] = List.empty
+  private val buffer = StreamBuffer.empty[Elem]
 
   /** Possibly retrieves the next element in the XML stream and effectively advancing the underlying
     * InputStream
     */
   def getNext: StreamError Xor Option[Elem] = this.synchronized {
-    if (heads.nonEmpty) {
-      val r = heads.headOption.right
-      heads = heads.tail
-      r
-    } else {
+    if (buffer.nonEmpty)
+      buffer.get.right
+    else {
       if (!reader.hasNext)
         None.right
       else
@@ -40,20 +34,17 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader) {
     * Causes the underlying InputStream to advance
     */
   def peek: StreamError Xor Option[Elem] = this.synchronized {
-    if (heads.nonEmpty)
-      heads.headOption.right
+    if (buffer.nonEmpty)
+      buffer.peek.right
     else {
       for {
         next ← getNext
       } yield {
-        next foreach (elem ⇒ prepend(elem))
+        next foreach buffer.add
         next
       }
     }
   }
-
-  private def prepend(elem: Elem): Unit =
-    heads = elem :: heads
 
   private def unsafeNextElement: Elem = {
     val event = reader.nextEvent()
@@ -103,4 +94,31 @@ object UnsafeStreamParser {
       case Peek ⇒ XorT(Future(parser.peek))
     }
   }
+}
+
+private [exemelle] class StreamBuffer[A] {
+
+  private var buff = List.empty[A]
+
+  def peek: Option[A] =
+    buff.headOption
+
+  def add(a: A) = this.synchronized {
+    buff = a :: buff
+  }
+
+  def get: Option[A] = this.synchronized {
+    val v = buff.headOption
+    if (buff.nonEmpty)
+      buff = buff.tail
+    v
+  }
+
+  def isEmpty: Boolean = buff.isEmpty
+
+  def nonEmpty: Boolean = !isEmpty
+}
+
+object StreamBuffer {
+  def empty[A]: StreamBuffer[A] = new StreamBuffer[A]
 }
