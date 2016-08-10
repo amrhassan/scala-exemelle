@@ -3,6 +3,7 @@ package exemelle
 import java.io.{InputStream, StringWriter}
 import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
 import javax.xml.stream.{XMLEventReader, XMLInputFactory, XMLStreamConstants, XMLStreamException}
+import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.{Xor, XorT}
@@ -92,7 +93,7 @@ object UnsafeStreamParser {
   def interpreter(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): Interpreter = new Interpreter {
 
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
-      case Take(n) ⇒ XorT(Future(take(n)))
+      case Take(n) ⇒ XorT(Future(takeTailrec(n, Vector.empty.right)))
       case DropWhile(p) ⇒ XorT(Future(dropWhile(p)))
       case TakeWhile(p) ⇒ XorT(Future(takeWhile(p)))
     }
@@ -104,6 +105,13 @@ object UnsafeStreamParser {
         next ← parser.getNext
         subsequent ← take(n-1)
       } yield next.toVector ++ subsequent
+
+    @tailrec
+    def takeTailrec(n: Int, accXor: StreamError Xor Vector[Elem]): StreamError Xor Vector[Elem] =
+      if (n == 0)
+        accXor
+      else
+        takeTailrec(n-1, parser.getNext.flatMap(next ⇒ accXor.map(acc ⇒ acc ++ next.toVector)))
 
     def dropWhile(p: Elem ⇒ Boolean): StreamError Xor Unit = {
       parser.peek >>= { peeked ⇒
