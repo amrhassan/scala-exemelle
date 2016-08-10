@@ -9,3 +9,9 @@ libraryDependencies ++= Seq(
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.8.0")
+
+scalacOptions ++= Seq(
+  "-Xfatal-warnings",
+  "-Ywarn-unused-import",
+  "-Xlint"
+)

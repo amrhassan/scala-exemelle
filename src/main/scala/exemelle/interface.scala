@@ -3,8 +3,8 @@ package exemelle
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.{Xor, XorT}
 import cats.free.Free
-import cats.~>
 import cats.implicits._
+
 
 sealed trait StreamOp[A]
 case object Peek extends StreamOp[Option[Elem]]

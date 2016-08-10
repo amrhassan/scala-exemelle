@@ -3,7 +3,6 @@ package exemelle
 import java.io.{InputStream, StringWriter}
 import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
 import javax.xml.stream.{XMLEventReader, XMLInputFactory, XMLStreamConstants, XMLStreamException}
-import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.{Xor, XorT}
