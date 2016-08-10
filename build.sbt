@@ -1,6 +1,7 @@
-name := "scala-exemelle"
+name := "exemelle"
 version := "0.1.0-SNAPSHOT"
 scalaVersion := "2.11.8"
+organization := "io.github.amrhassan"
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.6.1",
