@@ -7,8 +7,6 @@ import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.{Xor, XorT}
 import cats.implicits._
-import cats.~>
-import exemelle.StreamJob.Interpreter
 
 
 /** An XML stream parser that changes the state of its underlying InputStream */

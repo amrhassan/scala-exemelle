@@ -41,8 +41,6 @@ object StreamJob {
   def findTagNamed(name: String): StreamJob[Vector[Elem]] =
     aggregate(_.name == name)(_.name == name)
 
-  type Interpreter = StreamOp ~> XorT[Future, StreamError, ?]
-
   def run[A](interpreter: Interpreter)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
     job.foldMap[XorT[Future, StreamError, ?]](interpreter).value
 }
