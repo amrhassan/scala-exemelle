@@ -30,11 +30,15 @@ object StreamJob {
   def dropUntil(p: Elem ⇒ Boolean): StreamJob[Unit] =
     dropWhile(e ⇒ !p(e))
 
-  /** Aggregates a sequence of elements defined by a starting tag and an ending tag */
+  /** Takes all elements until the specified element is found (exclusive) */
+  def takeUntil(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
+    takeWhile(e ⇒ !p(e))
+
+  /** Aggregates a sequence of elements defined by a starting tag and a subsequent ending tag */
   def aggregate(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Vector[Elem]] =
     for {
-      _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false}
-      elements ← takeWhile { case tag: EndTag if end(tag) ⇒ false; case _ ⇒ true}
+      _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false }
+      elements ← takeUntil { case tag: EndTag if end(tag) ⇒ true; case _ ⇒ false }
       last ← take(1)
     } yield elements ++ last
 
