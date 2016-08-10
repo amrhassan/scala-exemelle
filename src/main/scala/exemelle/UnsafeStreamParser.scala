@@ -91,33 +91,9 @@ object UnsafeStreamParser {
     UnsafeStreamParser(XMLInputFactory.newInstance().createXMLEventReader(in))
 
   def interpreter(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): Interpreter = new Interpreter {
-
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
       case Next ⇒ XorT(Future(parser.getNext))
       case Peek ⇒ XorT(Future(parser.peek))
-      case DropWhile(p) ⇒ XorT(Future(dropWhile(p)))
-      case TakeWhile(p) ⇒ XorT(Future(takeWhile(p)))
-    }
-
-    def dropWhile(p: Elem ⇒ Boolean): StreamError Xor Unit = {
-      parser.peek >>= { peeked ⇒
-        if (peeked exists p)
-          { parser.getNext; dropWhile(p) }
-        else
-          Xor.right(())
-      }
-    }
-
-    def takeWhile(p: Elem ⇒ Boolean): StreamError Xor Vector[Elem] = {
-      parser.peek >>= { peeked ⇒
-        if (peeked exists p)
-          for {
-            next ← parser.getNext
-            subsequent ← takeWhile(p)
-          } yield next.toVector ++ subsequent
-        else
-          Xor.right(Vector.empty)
-      }
     }
   }
 }

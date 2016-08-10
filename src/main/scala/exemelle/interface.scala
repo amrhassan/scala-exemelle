@@ -7,10 +7,6 @@ import cats.~>
 import cats.implicits._
 
 sealed trait StreamOp[A]
-
-case class DropWhile(p: Elem ⇒ Boolean) extends StreamOp[Unit]
-case class TakeWhile(p: Elem ⇒ Boolean) extends StreamOp[Vector[Elem]]
-
 case object Peek extends StreamOp[Option[Elem]]
 case object Next extends StreamOp[Option[Elem]]
 
@@ -20,20 +16,38 @@ object StreamJob {
   def pure[A](a: A): StreamJob[A] =
     Free.pure(a)
 
+  /** Retrieves the next element */
   def next: StreamJob[Option[Elem]] =
     Free.liftF(Next)
 
+  /** Peeks into the next element */
+  def peek: StreamJob[Option[Elem]] =
+    Free.liftF(Peek)
+
   /** Take elements from stream while p is true */
   def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
-    Free.liftF(TakeWhile(p))
+    peek >>= { peeked ⇒
+      if (peeked exists p)
+        for {
+          elem ← next
+          subsequent ← takeWhile(p)
+        } yield elem.toVector ++ subsequent
+      else
+        pure(Vector.empty)
+    }
 
   /** Drops elements from stream while predicate is true */
   def dropWhile(p: Elem ⇒ Boolean): StreamJob[Unit] =
-    Free.liftF(DropWhile(p))
+    peek >>= { peeked ⇒
+      if (peeked exists p)
+        next >> dropWhile(p)
+      else
+        pure(())
+    }
 
   def take(n: Int): StreamJob[Vector[Elem]] =
     if (n == 0)
-      Free.pure(Vector.empty)
+      pure(Vector.empty)
     else for {
       elem ← next
       subsequent ← take(n-1)
