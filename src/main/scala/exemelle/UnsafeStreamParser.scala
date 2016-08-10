@@ -93,25 +93,11 @@ object UnsafeStreamParser {
   def interpreter(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): Interpreter = new Interpreter {
 
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
-      case Take(n) ⇒ XorT(Future(takeTailrec(n, Vector.empty.right)))
+      case Next ⇒ XorT(Future(parser.getNext))
+      case Peek ⇒ XorT(Future(parser.peek))
       case DropWhile(p) ⇒ XorT(Future(dropWhile(p)))
       case TakeWhile(p) ⇒ XorT(Future(takeWhile(p)))
     }
-
-    def take(n: Int): StreamError Xor Vector[Elem] =
-      if (n == 0)
-        Vector.empty.right
-      else for {
-        next ← parser.getNext
-        subsequent ← take(n-1)
-      } yield next.toVector ++ subsequent
-
-    @tailrec
-    def takeTailrec(n: Int, accXor: StreamError Xor Vector[Elem]): StreamError Xor Vector[Elem] =
-      if (n == 0)
-        accXor
-      else
-        takeTailrec(n-1, parser.getNext.flatMap(next ⇒ accXor.map(acc ⇒ acc ++ next.toVector)))
 
     def dropWhile(p: Elem ⇒ Boolean): StreamError Xor Unit = {
       parser.peek >>= { peeked ⇒

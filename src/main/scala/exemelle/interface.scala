@@ -10,10 +10,18 @@ sealed trait StreamOp[A]
 
 case class DropWhile(p: Elem ⇒ Boolean) extends StreamOp[Unit]
 case class TakeWhile(p: Elem ⇒ Boolean) extends StreamOp[Vector[Elem]]
-case class Take(n: Int) extends StreamOp[Vector[Elem]]
+
+case object Peek extends StreamOp[Option[Elem]]
+case object Next extends StreamOp[Option[Elem]]
 
 /** XML stream jobs */
 object StreamJob {
+
+  def pure[A](a: A): StreamJob[A] =
+    Free.pure(a)
+
+  def next: StreamJob[Option[Elem]] =
+    Free.liftF(Next)
 
   /** Take elements from stream while p is true */
   def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
@@ -24,7 +32,12 @@ object StreamJob {
     Free.liftF(DropWhile(p))
 
   def take(n: Int): StreamJob[Vector[Elem]] =
-    Free.liftF(Take(n))
+    if (n == 0)
+      Free.pure(Vector.empty)
+    else for {
+      elem ← next
+      subsequent ← take(n-1)
+    } yield elem.toVector ++ subsequent
 
   /** Drops all elements until one satisfies predicate */
   def dropUntil(p: Elem ⇒ Boolean): StreamJob[Unit] =
