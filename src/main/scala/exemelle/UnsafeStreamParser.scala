@@ -13,7 +13,10 @@ import cats.implicits._
 /** An XML stream parser that changes the state of its underlying InputStream */
 case class UnsafeStreamParser private(private val reader: XMLEventReader) {
 
-  /** Prepended elements to the stream */
+  /** Prepended elements to the stream.
+    *
+    * Latest elements first!
+    */
   private var heads: List[Elem] = List.empty
 
   /** Possibly retrieves the next element in the XML stream and effectively advancing the underlying
@@ -37,11 +40,15 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader) {
     * Causes the underlying InputStream to advance
     */
   def peek: StreamError Xor Option[Elem] = this.synchronized {
-    for {
-      next ← getNext
-    } yield {
-      next foreach (elem ⇒ prepend(elem))
-      next
+    if (heads.nonEmpty)
+      heads.headOption.right
+    else {
+      for {
+        next ← getNext
+      } yield {
+        next foreach (elem ⇒ prepend(elem))
+        next
+      }
     }
   }
 
