@@ -18,5 +18,5 @@ scalacOptions ++= Seq(
 )
 
 scalacOptions in (Compile, doc) ++= Seq(
-  "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
+  "-no-link-warnings" // Suppresses problems with Scaladoc
 )
