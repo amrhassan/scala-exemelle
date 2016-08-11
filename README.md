@@ -1,5 +1,5 @@
 # exemelle #
-Parser combinators for XML element streams
+Reasonable parser combinators for XML element streams
 
 # Usage #
 ```sbt
@@ -15,7 +15,14 @@ import exemelle.StreamParser
 // the StreamJob object
 
 // Perhaps you want to capture the XML elements numbered 11 to 15?
-val take5After10 = drop(10) >> take(5)
+val take5After10 = for {
+    _ <- drop(10)
+    elems <- take(5)
+  } yield elems
+  
+// or drop everything until you encounter the "author" starting tag then take 5 elem?
+import cats.implicits._   // For the >> shorthand
+val dropUtilAuthor = dropUntil(_name == "author") >> take(5)
 
 // Or the full tag named "book"?
 val bookTag = takeTagNamed("book")
