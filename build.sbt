@@ -16,3 +16,7 @@ scalacOptions ++= Seq(
   "-Ywarn-unused-import",
   "-Xlint"
 )
+
+scalacOptions in (Compile, doc) ++= Seq(
+  "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
+)
