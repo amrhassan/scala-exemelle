@@ -70,7 +70,7 @@ object StreamJob {
     } yield elements ++ last
 
   def extractNamed(name: String): StreamJob[Tag] =
-    aggregate(_.name == name)(_.name == name)
+    aggregate(_.name == name)(_.name == name) map Tag
 
   /** Extracts all the tags with the given name */
   def extractAllNamed(name: String): StreamJob[Vector[Tag]] =
