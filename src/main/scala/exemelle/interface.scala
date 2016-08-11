@@ -26,15 +26,35 @@ object StreamJob {
 
   /** Take elements from stream while p is true */
   def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
+    takeWhileWithState[Boolean]((elem, s) ⇒ p(elem))(true)((elem, s) ⇒ true) // Boolean is a dummy type
+
+//  def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
+//    peek >>= { peeked ⇒
+//      if (peeked exists p)
+//        for {
+//          elem ← next
+//          subsequent ← takeWhile(p)
+//        } yield elem.toVector ++ subsequent
+//      else
+//        pure(Vector.empty)
+//    }
+
+  /** A fancier version of takeWhile that maintains a state between successive calls of takeWhile given
+    * the initial state and the state transition based on the current state and current element.
+    */
+  def takeWhileWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamJob[Vector[Elem]] =
     peek >>= { peeked ⇒
-      if (peeked exists p)
+      if (peeked exists (e ⇒ p(e, s)))
         for {
           elem ← next
-          subsequent ← takeWhile(p)
+          subsequent ← takeWhileWithState(p)(stateTransition(elem, s))(stateTransition)
         } yield elem.toVector ++ subsequent
       else
         pure(Vector.empty)
     }
+
+  def takeUntilWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamJob[Vector[Elem]] =
+    takeWhileWithState[S]((elem, s) ⇒ !p(elem, s))(s)(stateTransition)
 
   /** Drops elements from stream while predicate is true */
   def dropWhile(p: Elem ⇒ Boolean): StreamJob[Unit] =
@@ -65,7 +85,11 @@ object StreamJob {
   def aggregate(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Vector[Elem]] =
     for {
       _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false }
-      elements ← takeUntil { case tag: EndTag if end(tag) ⇒ true; case _ ⇒ false }
+      elements ← takeUntilWithState[Int] { case (tag: EndTag, s) if s == 1 && end(tag) ⇒ true; case _ ⇒ false } (0) {
+        case (Some(tag: StartTag), s) ⇒ s + 1
+        case (Some(tag: EndTag), s) ⇒ s - 1
+        case (_, s) ⇒ s
+      }
       last ← take(1)
     } yield elements ++ last
 
