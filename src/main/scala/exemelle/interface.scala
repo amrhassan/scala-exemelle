@@ -69,8 +69,10 @@ object StreamJob {
       last ← take(1)
     } yield elements ++ last
 
-  def extractNamed(name: String): StreamJob[Tag] =
-    aggregate(_.name == name)(_.name == name) map Tag
+  def extractNamed(name: String): StreamJob[Option[Tag]] =
+    aggregate(_.name == name)(_.name == name) map { elems ⇒
+      if (elems.nonEmpty) Some(Tag(elems)) else None
+    }
 
   /** Extracts all the tags with the given name */
   def extractAllNamed(name: String): StreamJob[Vector[Tag]] =
@@ -78,7 +80,7 @@ object StreamJob {
       if (tag.isEmpty)
         pure(Vector.empty)
       else
-        extractAllNamed(name) map (tag +: _)
+        extractAllNamed(name) map (tag.toVector ++ _)
     }
 
   def run[A](interpreter: Interpreter)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =

@@ -14,8 +14,6 @@ case class Attribute(name: String, value: String)
 
 case class Tag(elems: Vector[Elem]) {
   def originalText: String = elems.map(_.text).mkString
-  def nonEmpty: Boolean = elems.nonEmpty
-  def isEmpty: Boolean = elems.isEmpty
 }
 
 /** An XML error */
