@@ -54,6 +54,7 @@ object StreamJob {
         pure(())
     }
 
+  /** Takes n elements */
   def take(n: Int): StreamJob[Vector[Elem]] =
     if (n == 0)
       pure(Vector.empty)
@@ -61,6 +62,13 @@ object StreamJob {
       elem ← next
       subsequent ← take(n-1)
     } yield elem.toVector ++ subsequent
+
+  /** Drops n elements */
+  def drop(n: Int): StreamJob[Unit] =
+    if (n == 0)
+      pure(())
+    else
+      next >> drop(n-1)
 
   /** Drops all elements until one satisfies predicate */
   def dropUntil(p: Elem ⇒ Boolean): StreamJob[Unit] =
