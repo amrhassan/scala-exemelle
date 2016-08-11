@@ -2,15 +2,16 @@ package exemelle
 
 import java.io.{InputStream, StringWriter}
 import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
-import javax.xml.stream.{XMLEventReader, XMLInputFactory, XMLStreamConstants, XMLStreamException}
+import javax.xml.stream.{XMLInputFactory, XMLStreamConstants, XMLStreamException}
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.{Xor, XorT}
 import cats.implicits._
+import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
 
 
 /** An XML stream parser that changes the state of its underlying InputStream */
-case class UnsafeStreamParser private(private val reader: XMLEventReader) {
+case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
 
   private val buffer = StreamBuffer.empty[Elem]
 
@@ -84,8 +85,11 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader) {
 
 object UnsafeStreamParser {
 
-  def apply(in: InputStream): UnsafeStreamParser =
-    UnsafeStreamParser(XMLInputFactory.newInstance().createXMLEventReader(in))
+  def apply(in: InputStream): UnsafeStreamParser = {
+    val factory = XMLInputFactory.newInstance().asInstanceOf[XMLInputFactory2]
+    val reader = factory.createXMLEventReader(in).asInstanceOf[XMLEventReader2]
+    UnsafeStreamParser(reader)
+  }
 
   def interpreter(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): Interpreter = new Interpreter {
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
