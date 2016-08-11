@@ -69,8 +69,17 @@ object StreamJob {
       last ← take(1)
     } yield elements ++ last
 
-  def findTagNamed(name: String): StreamJob[Vector[Elem]] =
+  def extractNamed(name: String): StreamJob[Tag] =
     aggregate(_.name == name)(_.name == name)
+
+  /** Extracts all the tags with the given name */
+  def extractAllNamed(name: String): StreamJob[Vector[Tag]] =
+    extractNamed(name) >>= { tag ⇒
+      if (tag.isEmpty)
+        pure(Vector.empty)
+      else
+        extractAllNamed(name) map (tag +: _)
+    }
 
   def run[A](interpreter: Interpreter)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
     job.foldMap[XorT[Future, StreamError, ?]](interpreter).value
