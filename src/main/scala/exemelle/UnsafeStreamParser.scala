@@ -53,9 +53,13 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
       case XMLStreamConstants.END_ELEMENT ⇒ endTag(event.asEndElement())
       case XMLStreamConstants.START_DOCUMENT ⇒ startDocument(event)
       case XMLStreamConstants.CHARACTERS ⇒ text(event)
+      case XMLStreamConstants.COMMENT ⇒ comment(event)
       case _ ⇒ Other(event.getEventType, event.toString)
     }
   }
+
+  private def comment(elem: XMLEvent): Comment =
+    Comment(originalNodeString(elem))
 
   private def endTag(elem: EndElement): EndTag =
     EndTag(elem.getName.getLocalPart, originalNodeString(elem))
