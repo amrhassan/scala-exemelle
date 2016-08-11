@@ -28,17 +28,6 @@ object StreamJob {
   def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
     takeWhileWithState[Boolean]((elem, s) ⇒ p(elem))(true)((elem, s) ⇒ true) // Boolean is a dummy type
 
-//  def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
-//    peek >>= { peeked ⇒
-//      if (peeked exists p)
-//        for {
-//          elem ← next
-//          subsequent ← takeWhile(p)
-//        } yield elem.toVector ++ subsequent
-//      else
-//        pure(Vector.empty)
-//    }
-
   /** A fancier version of takeWhile that maintains a state between successive calls of takeWhile given
     * the initial state and the state transition based on the current state and current element.
     */
@@ -81,8 +70,10 @@ object StreamJob {
   def takeUntil(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
     takeWhile(e ⇒ !p(e))
 
-  /** Aggregates a sequence of elements defined by a starting tag and a subsequent ending tag */
-  def aggregate(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Vector[Elem]] =
+  /** Takes a sequence of elements making up a tag given matchers for the [[StartTag]]
+    * and [[EndTag]].
+    */
+  def takeTag(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Option[Tag]] =
     for {
       _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false }
       elements ← takeUntilWithState[Int] { case (tag: EndTag, s) if s == 1 && end(tag) ⇒ true; case _ ⇒ false } (0) {
@@ -90,23 +81,23 @@ object StreamJob {
         case (Some(tag: EndTag), s) ⇒ s - 1
         case (_, s) ⇒ s
       }
-      last ← take(1)
-    } yield elements ++ last
+      last ← if (elements.nonEmpty) take(1) else pure(Vector.empty)
+      allElements = elements ++ last
+    } yield if (allElements.nonEmpty) Some(Tag(allElements)) else None
 
-  def extractNamed(name: String): StreamJob[Option[Tag]] =
-    aggregate(_.name == name)(_.name == name) map { elems ⇒
-      if (elems.nonEmpty) Some(Tag(elems)) else None
-    }
+  def takeTagNamed(name: String): StreamJob[Option[Tag]] =
+    takeTag(_.name == name)(_.name == name)
 
-  /** Extracts all the tags with the given name */
-  def extractAllNamed(name: String): StreamJob[Vector[Tag]] =
-    extractNamed(name) >>= { tag ⇒
+  /** Takes all the tags with the given name */
+  def takeTagsNamed(name: String): StreamJob[Vector[Tag]] =
+    takeTagNamed(name) >>= { tag ⇒
       if (tag.isEmpty)
         pure(Vector.empty)
       else
-        extractAllNamed(name) map (tag.toVector ++ _)
+        takeTagsNamed(name) map (tag.toVector ++ _)
     }
 
-  def run[A](interpreter: Interpreter)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
-    job.foldMap[XorT[Future, StreamError, ?]](interpreter).value
+  def run[A](parser: StreamParser)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
+    job.foldMap[XorT[Future, StreamError, ?]](parser).value
 }
+

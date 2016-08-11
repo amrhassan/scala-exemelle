@@ -5,5 +5,5 @@ import cats.~>
 
 package object exemelle {
   type StreamJob[A] = Free[StreamOp, A]
-  type Interpreter = StreamOp ~> XorT[Future, StreamError, ?]
+  type StreamParser = StreamOp ~> XorT[Future, StreamError, ?]
 }

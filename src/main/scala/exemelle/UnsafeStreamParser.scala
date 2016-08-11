@@ -95,7 +95,8 @@ object UnsafeStreamParser {
     UnsafeStreamParser(reader)
   }
 
-  def interpreter(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): Interpreter = new Interpreter {
+  /** Constructs [[StreamParser]] backed by the given [[UnsafeStreamParser]] */
+  def streamParser(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): StreamParser = new StreamParser {
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
       case Next ⇒ XorT(Future(parser.getNext))
       case Peek ⇒ XorT(Future(parser.peek))
