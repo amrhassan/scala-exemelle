@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Scala-exemelle by amrhassan</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Scala-exemelle</h1>
+        <p>Reasonable parser combinators for XML element streams</p>
+
+        <p class="view"><a href="https://github.com/amrhassan/scala-exemelle">View the Project on GitHub <small>amrhassan/scala-exemelle</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/amrhassan/scala-exemelle/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/amrhassan/scala-exemelle/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/amrhassan/scala-exemelle">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="exemelle" class="anchor" href="#exemelle" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>exemelle</h1>
+
+<p>Reasonable parser combinators for XML element streams</p>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<div class="highlight highlight-source-scala"><pre>resolvers <span class="pl-k">+</span><span class="pl-k">=</span> <span class="pl-en">Resolver</span>.sonatypeRepo(<span class="pl-s"><span class="pl-pds">"</span>snapshots<span class="pl-pds">"</span></span>)
+libraryDependencies <span class="pl-k">+</span><span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>io.github.amrhassan<span class="pl-pds">"</span></span> <span class="pl-k">%%</span> <span class="pl-s"><span class="pl-pds">"</span>exemelle<span class="pl-pds">"</span></span> <span class="pl-k">%</span> <span class="pl-s"><span class="pl-pds">"</span>0.1.0-SNAPSHOT<span class="pl-pds">"</span></span></pre></div>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">exemelle.StreamJob.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">exemelle.</span><span class="pl-v">StreamParser</span>
+
+<span class="pl-c">// You can describe how you want to process the stream in terms of combinators found in</span>
+<span class="pl-c">// the StreamJob object</span>
+
+<span class="pl-c">// Perhaps you want to capture the XML elements numbered 11 to 15?</span>
+<span class="pl-k">val</span> <span class="pl-en">take5After10</span> <span class="pl-k">=</span> <span class="pl-k">for</span> {
+    _ <span class="pl-k">&lt;</span><span class="pl-k">-</span> drop(<span class="pl-c1">10</span>)
+    elems <span class="pl-k">&lt;</span><span class="pl-k">-</span> take(<span class="pl-c1">5</span>)
+  } <span class="pl-k">yield</span> elems
+
+<span class="pl-c">// or drop everything until you encounter the "author" starting tag then take 5 elem?</span>
+<span class="pl-k">import</span> <span class="pl-v">cats.implicits.</span><span class="pl-v">_   </span><span class="pl-c">// For the &gt;&gt; shorthand</span>
+<span class="pl-k">val</span> <span class="pl-en">dropUtilAuthor</span> <span class="pl-k">=</span> dropUntil(_name <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>author<span class="pl-pds">"</span></span>) <span class="pl-k">&gt;&gt;</span> take(<span class="pl-c1">5</span>)
+
+<span class="pl-c">// Or the full tag named "book"?</span>
+<span class="pl-k">val</span> <span class="pl-en">bookTag</span> <span class="pl-k">=</span> findTagNamed(<span class="pl-s"><span class="pl-pds">"</span>book<span class="pl-pds">"</span></span>)
+
+<span class="pl-c">// Or al the full tags named "book"?</span>
+<span class="pl-k">val</span> <span class="pl-en">allBookTags</span> <span class="pl-k">=</span> findAllTagsNamed(<span class="pl-s"><span class="pl-pds">"</span>book<span class="pl-pds">"</span></span>)
+
+
+<span class="pl-c">// You need parser implementation to parse through your stream</span>
+<span class="pl-k">import</span> <span class="pl-v">scala.concurrent.ExecutionContext.Implicits.</span><span class="pl-v">global</span>
+<span class="pl-k">val</span> <span class="pl-en">parser</span> <span class="pl-k">=</span> <span class="pl-en">StreamParser</span>.fromInputStream(<span class="pl-c">/* a java.io.InputStream */</span>)
+
+<span class="pl-c">// Now you can run one of the actions you've constructed earlier</span>
+run(parser)(allBookTags) <span class="pl-c">// runs it into a Future[StreamError Xor Vector[Tag]]</span></pre></div>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/amrhassan">amrhassan</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
