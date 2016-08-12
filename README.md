@@ -25,10 +25,10 @@ import cats.implicits._   // For the >> shorthand
 val dropUtilAuthor = dropUntil(_name == "author") >> take(5)
 
 // Or the full tag named "book"?
-val bookTag = takeTagNamed("book")
+val bookTag = findTagNamed("book")
 
 // Or al the full tags named "book"?
-val allBookTags = takeTagsNamed("book")
+val allBookTags = findAllTagsNamed("book")
 
 
 // You need parser implementation to parse through your stream

@@ -78,10 +78,14 @@ object StreamJob {
   def takeUntil(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
     takeWhile(e ⇒ !p(e))
 
-  /** Takes a sequence of elements making up a tag given matchers for the [[StartTag]]
-    * and [[EndTag]].
+  /** Advances the element stream until it finds an element satisfying the [[StartTag]] predicate
+    * then accumulates all the elements in memory until it finds a suitable closing tag satisfying
+    * the [[EndTag]] predicate and returns those elements as a [[Tag]]
+    *
+    * Beware, this can blow up the memory consumption. Only use if you're sure the matched elements
+    * can fit in application memory.
     */
-  def takeTag(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Option[Tag]] =
+  def findTag(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Option[Tag]] =
     for {
       _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false }
       elements ← takeUntilWithState[Int] { case (tag: EndTag, s) if s == 1 && end(tag) ⇒ true; case _ ⇒ false } (0) {
@@ -93,16 +97,27 @@ object StreamJob {
       allElements = elements ++ last
     } yield if (allElements.nonEmpty) Some(Tag(allElements)) else None
 
-  def takeTagNamed(name: String): StreamJob[Option[Tag]] =
-    takeTag(_.name == name)(_.name == name)
+  /**
+    * Advances the element stream until it finds a [[StartTag]] with the specified name and accumulates in memory
+    * all the elements constituting the tag until a suitable matching [[EndTag]] is encountered
+    *
+    * Beware, this can blow up the memory consumption. Only use if you're sure all the encountered elements can
+    * fit in application memory.
+    */
+  def findTagNamed(name: String): StreamJob[Option[Tag]] =
+    findTag(_.name == name)(_.name == name)
 
-  /** Takes all the tags with the given name */
-  def takeTagsNamed(name: String): StreamJob[Vector[Tag]] =
-    takeTagNamed(name) >>= { tag ⇒
+  /** Like [[findTagNamed]] but keeps going until the end of the stream is encountered
+    *
+    * Beware, this can blow up the memory consumption. Only use if you're sure all the encountered elements can
+    * fit in application memory.
+    */
+  def findAllTagsNamed(name: String): StreamJob[Vector[Tag]] =
+    findTagNamed(name) >>= { tag ⇒
       if (tag.isEmpty)
         pure(Vector.empty)
       else
-        takeTagsNamed(name) map (tag.toVector ++ _)
+        findAllTagsNamed(name) map (tag.toVector ++ _)
     }
 
   def run[A](parser: StreamParser)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
