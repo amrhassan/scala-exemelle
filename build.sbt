@@ -1,5 +1,5 @@
 name := "exemelle"
-version := "0.1.0-SNAPSHOT"
+version := "0.1.0RC0"
 scalaVersion := "2.11.8"
 organization := "io.github.amrhassan"
 
