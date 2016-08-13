@@ -11,10 +11,10 @@ class UnsafeStreamParserSpec extends Specification with XorMatchers { def is = s
   """
 
   def firstElement =
-    newParser.getNext() must beLike { case Xor.Right(Some(elem: StartDocument)) ⇒ ok }
+    Testing.createBreakfastMenuParser.getNext() must beLike { case Xor.Right(Some(elem: StartDocument)) ⇒ ok }
 
   def nexting = {
-    val parser = newParser
+    val parser = Testing.createBreakfastMenuParser
     val _ = parser.getNext()
 
     val first =
@@ -30,7 +30,7 @@ class UnsafeStreamParserSpec extends Specification with XorMatchers { def is = s
   }
 
   def peeking = {
-    val parser = newParser
+    val parser = Testing.createBreakfastMenuParser
 
     val peekFirst =
       parser.peek() must beLike { case Xor.Right(Some(elem: StartDocument)) ⇒ ok }
@@ -52,7 +52,4 @@ class UnsafeStreamParserSpec extends Specification with XorMatchers { def is = s
 
     peekFirst and peekSecond and first and second and peekThird and third
   }
-
-  def newParser = UnsafeStreamParser(inputStream)
-  def inputStream = ClassLoader.getSystemResourceAsStream("breakfast_menu.xml")
 }
