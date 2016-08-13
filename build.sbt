@@ -6,7 +6,9 @@ organization := "io.github.amrhassan"
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.6.1",
   "org.typelevel" %% "cats-free" % "0.6.1",
-  "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2"
+  "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2",
+  "org.specs2" %% "specs2-core" % "3.8.4" % "test",
+  "org.specs2" %% "specs2-cats" % "3.8.4" % "test"
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.8.0")

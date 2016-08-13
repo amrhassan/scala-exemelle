@@ -25,9 +25,11 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
     * Returns [[None]] when reaches the end of the stream
     */
   def getNext(): StreamError Xor Option[Elem] = this.synchronized {
-    if (buffer.nonEmpty)
-      buffer.right
-    else {
+    if (buffer.nonEmpty) {
+      val buffered = buffer
+      buffer = Option.empty
+      buffered.right
+    } else {
       if (!reader.hasNext)
         None.right
       else
