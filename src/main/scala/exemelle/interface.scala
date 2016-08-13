@@ -5,33 +5,33 @@ import cats.data.{Xor, XorT}
 import cats.free.Free
 import cats.implicits._
 
-
+/** Primitive stream operations */
 sealed trait StreamOp[A]
 case object Peek extends StreamOp[Option[Elem]]
 case object Next extends StreamOp[Option[Elem]]
 
-/** XML stream jobs */
-object StreamJob {
+/** XML stream combinators */
+object StreamAction {
 
-  def pure[A](a: A): StreamJob[A] =
+  def pure[A](a: A): StreamAction[A] =
     Free.pure(a)
 
   /** Retrieves the next element */
-  def next: StreamJob[Option[Elem]] =
+  def next: StreamAction[Option[Elem]] =
     Free.liftF(Next)
 
   /** Peeks into the next element */
-  def peek: StreamJob[Option[Elem]] =
+  def peek: StreamAction[Option[Elem]] =
     Free.liftF(Peek)
 
   /** Take elements from stream while p is true */
-  def takeWhile(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
+  def takeWhile(p: Elem ⇒ Boolean): StreamAction[Vector[Elem]] =
     takeWhileWithState[Boolean]((elem, s) ⇒ p(elem))(true)((elem, s) ⇒ true) // Boolean is a dummy type
 
-  /** A fancier version of takeWhile that maintains a state between successive calls of takeWhile given
+  /** A fancier version of [[takeWhile]] that maintains a state between successive calls of takeWhile given
     * the initial state and the state transition based on the current state and current element.
     */
-  def takeWhileWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamJob[Vector[Elem]] =
+  def takeWhileWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamAction[Vector[Elem]] =
     peek >>= { peeked ⇒
       if (peeked exists (e ⇒ p(e, s)))
         for {
@@ -42,11 +42,11 @@ object StreamJob {
         pure(Vector.empty)
     }
 
-  def takeUntilWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamJob[Vector[Elem]] =
+  def takeUntilWithState[S](p: (Elem, S) ⇒ Boolean)(s: S)(stateTransition: (Option[Elem], S) ⇒ S): StreamAction[Vector[Elem]] =
     takeWhileWithState[S]((elem, s) ⇒ !p(elem, s))(s)(stateTransition)
 
   /** Drops elements from stream while predicate is true */
-  def dropWhile(p: Elem ⇒ Boolean): StreamJob[Unit] =
+  def dropWhile(p: Elem ⇒ Boolean): StreamAction[Unit] =
     peek >>= { peeked ⇒
       if (peeked exists p)
         next >> dropWhile(p)
@@ -55,7 +55,7 @@ object StreamJob {
     }
 
   /** Takes n elements */
-  def take(n: Int): StreamJob[Vector[Elem]] =
+  def take(n: Int): StreamAction[Vector[Elem]] =
     if (n == 0)
       pure(Vector.empty)
     else for {
@@ -64,18 +64,18 @@ object StreamJob {
     } yield elem.toVector ++ subsequent
 
   /** Drops n elements */
-  def drop(n: Int): StreamJob[Unit] =
+  def drop(n: Int): StreamAction[Unit] =
     if (n == 0)
       pure(())
     else
       next >> drop(n-1)
 
   /** Drops all elements until one satisfies predicate */
-  def dropUntil(p: Elem ⇒ Boolean): StreamJob[Unit] =
+  def dropUntil(p: Elem ⇒ Boolean): StreamAction[Unit] =
     dropWhile(e ⇒ !p(e))
 
   /** Takes all elements until the specified element is found (exclusive) */
-  def takeUntil(p: Elem ⇒ Boolean): StreamJob[Vector[Elem]] =
+  def takeUntil(p: Elem ⇒ Boolean): StreamAction[Vector[Elem]] =
     takeWhile(e ⇒ !p(e))
 
   /** Advances the element stream until it finds an element satisfying the [[StartTag]] predicate
@@ -85,7 +85,7 @@ object StreamJob {
     * Beware, this can blow up the memory consumption. Only use if you're sure the matched elements
     * can fit in application memory.
     */
-  def findTag(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamJob[Option[Tag]] =
+  def findTag(start: StartTag ⇒ Boolean)(end: EndTag ⇒ Boolean): StreamAction[Option[Tag]] =
     for {
       _ ← dropUntil { case tag: StartTag if start(tag) ⇒ true; case _ ⇒ false }
       elements ← takeUntilWithState[Int] { case (tag: EndTag, s) if s == 1 && end(tag) ⇒ true; case _ ⇒ false } (0) {
@@ -104,7 +104,7 @@ object StreamJob {
     * Beware, this can blow up the memory consumption. Only use if you're sure all the encountered elements can
     * fit in application memory.
     */
-  def findTagNamed(name: String): StreamJob[Option[Tag]] =
+  def findTagNamed(name: String): StreamAction[Option[Tag]] =
     findTag(_.name == name)(_.name == name)
 
   /** Like [[findTagNamed]] but keeps going until the end of the stream is encountered
@@ -112,7 +112,7 @@ object StreamJob {
     * Beware, this can blow up the memory consumption. Only use if you're sure all the encountered elements can
     * fit in application memory.
     */
-  def findAllTagsNamed(name: String): StreamJob[Vector[Tag]] =
+  def findAllTagsNamed(name: String): StreamAction[Vector[Tag]] =
     findTagNamed(name) >>= { tag ⇒
       if (tag.isEmpty)
         pure(Vector.empty)
@@ -120,7 +120,7 @@ object StreamJob {
         findAllTagsNamed(name) map (tag.toVector ++ _)
     }
 
-  def run[A](parser: StreamParser)(job: StreamJob[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
-    job.foldMap[XorT[Future, StreamError, ?]](parser).value
+  def run[A](parser: StreamParser)(action: StreamAction[A])(implicit ec: ExecutionContext): Future[StreamError Xor A] =
+    action.foldMap[XorT[Future, StreamError, ?]](parser).value
 }
 

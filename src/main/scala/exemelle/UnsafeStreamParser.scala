@@ -10,13 +10,19 @@ import cats.implicits._
 import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
 
 
-/** An XML stream parser that changes the state of its underlying InputStream */
+/** An XML stream parser that iterates over the [[Elem]]s in the underlying [[InputStream]], so non of
+  * the public API is safe.
+  *
+  * Implementation similar to an [[Iterator]] but with a peek buffer of size 1.
+  */
 case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
 
   private var buffer = Option.empty[Elem]
 
-  /** Possibly retrieves the next element in the XML stream and effectively advancing the underlying
-    * InputStream
+  /** Possibly retrieves the next [[Elem]] in the XML stream and effectively advancing the underlying
+    * [[InputStream]]
+    *
+    * Returns [[None]] when reaches the end of the stream
     */
   def getNext(): StreamError Xor Option[Elem] = this.synchronized {
     if (buffer.nonEmpty)
@@ -31,7 +37,7 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
 
   /** Peeks at the next element
     *
-    * Causes the underlying InputStream to advance
+    * Causes the underlying [[InputStream]] to advance by one element
     */
   def peek(): StreamError Xor Option[Elem] = this.synchronized {
     if (buffer.nonEmpty)
@@ -98,8 +104,8 @@ object UnsafeStreamParser {
   /** Constructs [[StreamParser]] backed by the given [[UnsafeStreamParser]] */
   def streamParser(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): StreamParser = new StreamParser {
     def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
-      case Next ⇒ XorT(Future(parser.getNext))
-      case Peek ⇒ XorT(Future(parser.peek))
+      case Next ⇒ XorT(Future(parser.getNext()))
+      case Peek ⇒ XorT(Future(parser.peek()))
     }
   }
 }
