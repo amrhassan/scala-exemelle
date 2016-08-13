@@ -13,14 +13,14 @@ import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
 /** An XML stream parser that changes the state of its underlying InputStream */
 case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
 
-  private val buffer = StreamBuffer.empty[Elem]
+  private var buffer = Option.empty[Elem]
 
   /** Possibly retrieves the next element in the XML stream and effectively advancing the underlying
     * InputStream
     */
-  def getNext: StreamError Xor Option[Elem] = this.synchronized {
+  def getNext(): StreamError Xor Option[Elem] = this.synchronized {
     if (buffer.nonEmpty)
-      buffer.get.right
+      buffer.right
     else {
       if (!reader.hasNext)
         None.right
@@ -33,14 +33,14 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
     *
     * Causes the underlying InputStream to advance
     */
-  def peek: StreamError Xor Option[Elem] = this.synchronized {
+  def peek(): StreamError Xor Option[Elem] = this.synchronized {
     if (buffer.nonEmpty)
-      buffer.peek.right
+      buffer.right
     else {
       for {
-        next ← getNext
+        next ← getNext()
       } yield {
-        next foreach buffer.add
+        next foreach (elem ⇒ buffer = Some(elem))
         next
       }
     }
@@ -102,31 +102,4 @@ object UnsafeStreamParser {
       case Peek ⇒ XorT(Future(parser.peek))
     }
   }
-}
-
-private [exemelle] class StreamBuffer[A] {
-
-  private var buff = List.empty[A]
-
-  def peek: Option[A] =
-    buff.headOption
-
-  def add(a: A) = this.synchronized {
-    buff = a :: buff
-  }
-
-  def get: Option[A] = this.synchronized {
-    val v = buff.headOption
-    if (buff.nonEmpty)
-      buff = buff.tail
-    v
-  }
-
-  def isEmpty: Boolean = buff.isEmpty
-
-  def nonEmpty: Boolean = !isEmpty
-}
-
-object StreamBuffer {
-  def empty[A]: StreamBuffer[A] = new StreamBuffer[A]
 }
