@@ -26,7 +26,7 @@ val take5After10 = for {
   
 // or drop everything until you encounter the "author" starting tag then take 5 elem?
 import cats.implicits._   // For the >> shorthand
-val dropUtilAuthor = dropUntil(_name == "author") >> take(5)
+val dropUtilAuthor = dropUntil(_.name == "author") >> take(5)
 
 // Or the full tag named "book"?
 val bookTag = findTagNamed("book")
