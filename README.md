@@ -8,7 +8,7 @@ Reasonable parser combinators for XML element streams
 # Usage #
 ```sbt
 resolvers += Resolver.sonatypeRepo("snapshots")
-libraryDependencies += "io.github.amrhassan" %% "exemelle" % "0.1.0RC1"
+libraryDependencies += "io.github.amrhassan" %% "exemelle" % "0.1.0RC2"
 ```
 
 ```scala
