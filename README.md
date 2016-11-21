@@ -40,5 +40,5 @@ import scala.concurrent.ExecutionContext.Implicits.global
 val parser = StreamParser.fromInputStream(/* a java.io.InputStream */)
 
 // Now you can run one of the actions you've constructed earlier
-run(parser)(allBookTags) // runs it into a Future[StreamError Xor Vector[Tag]]
+run(parser)(allBookTags) // runs it into a Future[Either[StreamError, Vector[Tag]]]
 ```
