@@ -19,7 +19,7 @@ scalacOptions ++= Seq(
   "-Xlint",
   "-feature",
   "-language:postfixOps",
-	"-deprecation"
+  "-deprecation"
 )
 
 scalacOptions in (Compile, doc) ++= Seq(
