@@ -3,7 +3,6 @@ package exemelle
 import org.specs2._
 import Testing._
 import StreamAction._
-import cats.data.Xor
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -18,7 +17,7 @@ class StreamActionSpec extends Specification { def is = s2"""
 
     val first =
       testRun(parser, action) must beLike {
-        case Xor.Right(Some(tag)) ⇒ tag.originalText must be equalTo
+        case Right(Some(tag)) ⇒ tag.originalText must be equalTo
           """<food>
             |        <food><name>This is fake</name></food>
             |        <name>Belgian Waffles</name>
@@ -32,7 +31,7 @@ class StreamActionSpec extends Specification { def is = s2"""
 
     val second =
       testRun(parser, action) must beLike {
-        case Xor.Right(Some(tag)) ⇒ tag.originalText must be equalTo
+        case Right(Some(tag)) ⇒ tag.originalText must be equalTo
           """<food>
             |        <food><name>This is fake</name></food>
             |        <name>Strawberry Belgian Waffles</name>
@@ -44,7 +43,7 @@ class StreamActionSpec extends Specification { def is = s2"""
             |    </food>""".stripMargin
       }
 
-    val third = testRun(parser, action) must beLike { case Xor.Right(None) ⇒ ok }
+    val third = testRun(parser, action) must beLike { case Right(None) ⇒ ok }
 
     first and second and third
   }

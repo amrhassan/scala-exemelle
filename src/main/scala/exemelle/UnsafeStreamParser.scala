@@ -3,9 +3,11 @@ package exemelle
 import java.io.{InputStream, StringWriter}
 import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
 import javax.xml.stream.{XMLInputFactory, XMLStreamConstants, XMLStreamException}
+
+import cats.data.EitherT
+
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
-import cats.data.{Xor, XorT}
 import cats.implicits._
 import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
 
@@ -24,16 +26,16 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
     *
     * Returns [[None]] when reaches the end of the stream
     */
-  def getNext(): StreamError Xor Option[Elem] = this.synchronized {
+  def getNext(): Either[StreamError, Option[Elem]] = this.synchronized {
     if (buffer.nonEmpty) {
       val buffered = buffer
       buffer = Option.empty
-      buffered.right
+      Right(buffered)
     } else {
       if (!reader.hasNext)
-        None.right
+        Right(None)
       else
-        Xor.catchOnly[XMLStreamException](Some(unsafeNextElement)) leftMap (t ⇒ StreamError(t.getMessage))
+        Either.catchOnly[XMLStreamException](Some(unsafeNextElement)) leftMap (t ⇒ StreamError(t.getMessage))
     }
   }
 
@@ -41,9 +43,9 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
     *
     * Causes the underlying [[InputStream]] to advance by one element
     */
-  def peek(): StreamError Xor Option[Elem] = this.synchronized {
+  def peek(): Either[StreamError, Option[Elem]] = this.synchronized {
     if (buffer.nonEmpty)
-      buffer.right
+      Right(buffer)
     else {
       for {
         next ← getNext()
@@ -105,9 +107,9 @@ object UnsafeStreamParser {
 
   /** Constructs [[StreamParser]] backed by the given [[UnsafeStreamParser]] */
   def streamParser(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): StreamParser = new StreamParser {
-    def apply[A](op: StreamOp[A]): XorT[Future, StreamError, A] = op match {
-      case Next ⇒ XorT(Future(parser.getNext()))
-      case Peek ⇒ XorT(Future(parser.peek()))
+    def apply[A](op: StreamOp[A]): EitherT[Future, StreamError, A] = op match {
+      case Next ⇒ EitherT(Future(parser.getNext()))
+      case Peek ⇒ EitherT(Future(parser.peek()))
     }
   }
 }
