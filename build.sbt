@@ -2,12 +2,13 @@ name := "exemelle"
 version := "0.1.0-SNAPSHOT"
 scalaVersion := "2.11.8"
 organization := "io.github.amrhassan"
+crossScalaVersions := Seq("2.11.8", "2.12.0")
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.8.1",
   "org.typelevel" %% "cats-free" % "0.8.1",
   "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2",
-  "org.specs2" %% "specs2-core" % "3.8.5" % "test"
+  "org.specs2" %% "specs2-core" % "3.8.6" % "test"
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
@@ -17,7 +18,8 @@ scalacOptions ++= Seq(
   "-Ywarn-unused-import",
   "-Xlint",
   "-feature",
-  "-language:postfixOps"
+  "-language:postfixOps",
+	"-deprecation"
 )
 
 scalacOptions in (Compile, doc) ++= Seq(
@@ -35,7 +37,7 @@ pomExtra := (
     </licenses>
     <scm>
       <url>git@github.com:amrhassan/scala-exemelle.git</url>
-      <connection>scm:git:git@github.com:amrhassan/scala-exemelle.git</connection>
+      <connection>scm:git@github.com:amrhassan/scala-exemelle.git</connection>
     </scm>
     <developers>
       <developer>

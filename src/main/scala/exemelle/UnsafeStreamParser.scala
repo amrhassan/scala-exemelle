@@ -6,7 +6,7 @@ import javax.xml.stream.{XMLInputFactory, XMLStreamConstants, XMLStreamException
 
 import cats.data.EitherT
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
 import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
@@ -82,7 +82,7 @@ case class UnsafeStreamParser private(private val reader: XMLEventReader2) {
 
   private def startTag(elem: StartElement): StartTag = {
     val startElement = elem.asStartElement()
-    val attributes = startElement.getAttributes map (_.asInstanceOf[javax.xml.stream.events.Attribute])
+    val attributes = startElement.getAttributes.asScala map (_.asInstanceOf[javax.xml.stream.events.Attribute])
     StartTag(
       startElement.getName.getLocalPart,
       attributes.toList map (attr ⇒ Attribute(attr.getName.getLocalPart, attr.getValue)),
