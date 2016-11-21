@@ -4,14 +4,13 @@ scalaVersion := "2.11.8"
 organization := "io.github.amrhassan"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "cats-core" % "0.8.0",
-  "org.typelevel" %% "cats-free" % "0.8.0",
+  "org.typelevel" %% "cats-core" % "0.8.1",
+  "org.typelevel" %% "cats-free" % "0.8.1",
   "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2",
-  "org.specs2" %% "specs2-core" % "3.8.5" % "test",
-  "org.specs2" %% "specs2-cats" % "3.8.5" % "test"
+  "org.specs2" %% "specs2-core" % "3.8.5" % "test"
 )
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.8.0")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
 
 scalacOptions ++= Seq(
   "-Xfatal-warnings",
