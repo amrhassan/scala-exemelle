@@ -1,6 +1,6 @@
 name := "exemelle"
-version := "0.1.0-SNAPSHOT"
-scalaVersion := "2.11.8"
+version := "1.0.0-SNAPSHOT"
+scalaVersion := "2.12.0"
 organization := "io.github.amrhassan"
 crossScalaVersions := Seq("2.11.8", "2.12.0")
 
