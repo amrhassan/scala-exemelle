@@ -1,12 +1,12 @@
 name := "exemelle"
 version := "1.0.1-SNAPSHOT"
-scalaVersion := "2.12.0"
+scalaVersion := "2.12.1"
 organization := "io.github.amrhassan"
-crossScalaVersions := Seq("2.11.8", "2.12.0")
+crossScalaVersions := Seq("2.11.8", "2.12.1")
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "cats-core" % "0.8.1",
-  "org.typelevel" %% "cats-free" % "0.8.1",
+  "org.typelevel" %% "cats-core" % "0.9.0",
+  "org.typelevel" %% "cats-free" % "0.9.0",
   "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2",
   "org.specs2" %% "specs2-core" % "3.8.6" % "test"
 )
