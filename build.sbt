@@ -1,8 +1,9 @@
 name := "exemelle"
-version := "1.0.1-SNAPSHOT"
 scalaVersion := "2.12.1"
 organization := "io.github.amrhassan"
-crossScalaVersions := Seq("2.11.8", "2.12.1")
+crossScalaVersions := Seq("2.11.8", scalaVersion.value)
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseCrossBuild := true
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.9.0",
