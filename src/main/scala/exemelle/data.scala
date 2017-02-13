@@ -1,5 +1,7 @@
 package exemelle
 
+import cats.Show
+
 sealed trait Elem {
   def text: String
 }
@@ -18,4 +20,8 @@ case class Tag(elems: Vector[Elem]) {
 }
 
 /** An XML error */
-case class StreamError(message: String)
+case class StreamError(message: String) extends Throwable
+
+object StreamError {
+  implicit val show: Show[StreamError] = Show.show(err => s"Stream error: ${err.message}")
+}
