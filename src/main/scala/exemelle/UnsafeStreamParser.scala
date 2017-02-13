@@ -3,11 +3,7 @@ package exemelle
 import java.io.{InputStream, StringWriter}
 import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
 import javax.xml.stream.{XMLInputFactory, XMLStreamConstants, XMLStreamException}
-
-import cats.data.EitherT
-
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
 import org.codehaus.stax2.{XMLEventReader2, XMLInputFactory2}
 
@@ -106,10 +102,11 @@ object UnsafeStreamParser {
   }
 
   /** Constructs [[StreamParser]] backed by the given [[UnsafeStreamParser]] */
-  def streamParser(parser: UnsafeStreamParser)(implicit ec: ExecutionContext): StreamParser = new StreamParser {
-    def apply[A](op: StreamOp[A]): EitherT[Future, StreamError, A] = op match {
-      case Next ⇒ EitherT(Future(parser.getNext()))
-      case Peek ⇒ EitherT(Future(parser.peek()))
+  def streamParser(parser: UnsafeStreamParser): StreamParser =
+    new StreamParser {
+      def apply[A](op: StreamOp[A]): Either[StreamError, A] = op match {
+        case Next ⇒ parser.getNext()
+        case Peek ⇒ parser.peek()
+      }
     }
-  }
 }

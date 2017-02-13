@@ -3,7 +3,6 @@ package exemelle
 import org.specs2._
 import Testing._
 import StreamAction._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class StreamActionSpec extends Specification { def is = s2"""

@@ -1,7 +1,5 @@
 package exemelle
 
-import scala.concurrent.{ExecutionContext, Future}
-import cats.data.EitherT
 import cats.free.Free
 import cats.implicits._
 
@@ -120,7 +118,7 @@ object StreamAction {
         findAllTagsNamed(name) map (tag.toVector ++ _)
     }
 
-  def run[A](parser: StreamParser)(action: StreamAction[A])(implicit ec: ExecutionContext): Future[Either[StreamError, A]] =
-    action.foldMap[EitherT[Future, StreamError, ?]](parser).value
+  def run[A](parser: StreamParser)(action: StreamAction[A]): Either[StreamError, A] =
+    action.foldMap[Either[StreamError, ?]](parser)
 }
 

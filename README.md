@@ -35,9 +35,8 @@ val allBookTags = findAllTagsNamed("book")
 
 
 // You need parser implementation to parse through your stream
-import scala.concurrent.ExecutionContext.Implicits.global
 val parser = StreamParser.fromInputStream(/* a java.io.InputStream */)
 
 // Now you can run one of the actions you've constructed earlier
-run(parser)(allBookTags) // runs it into a Future[Either[StreamError, Vector[Tag]]]
+run(parser)(allBookTags) // runs it into an Either[StreamError, Vector[Tag]]
 ```
