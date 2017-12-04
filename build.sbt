@@ -27,6 +27,13 @@ scalacOptions in (Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc
 )
 
+publishTo := Some(
+  if (isSnapshot.value)
+    Opts.resolver.sonatypeSnapshots
+  else
+    Opts.resolver.sonatypeStaging
+)
+
 licenses := Seq("MIT" -> url("http://www.opensource.org/licenses/mit-license.php"))
 homepage := Some(url("https://amrhassan.github.io/scala-exemelle"))
 scmInfo := Some(
