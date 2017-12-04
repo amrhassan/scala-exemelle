@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "3.8.6" % "test"
 )
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
 
 scalacOptions ++= Seq(
   "-Xfatal-warnings",
