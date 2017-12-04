@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.9.0",
   "org.typelevel" %% "cats-free" % "0.9.0",
   "com.fasterxml.woodstox" % "woodstox-core" % "5.0.2",
-  "org.specs2" %% "specs2-core" % "3.8.6" % "test"
+  "org.specs2" %% "specs2-core" % "4.0.2" % "test"
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
