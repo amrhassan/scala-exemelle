@@ -7,7 +7,7 @@ Reasonable parser combinators for XML element streams
 
 # Usage #
 ```sbt
-libraryDependencies += "io.github.amrhassan" %% "exemelle" % "1.0.0"
+libraryDependencies += "io.github.amrhassan" %% "exemelle" % "2.1.1"
 ```
 
 ```scala
